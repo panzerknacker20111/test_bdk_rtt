@@ -19,7 +19,13 @@
 #define RTOS_RT_THREAD                             2
 #define RTOS_FREERTOS                              3
 #define RTOS_LITEOS                                4
+#define CFG_WIFI_TX_KEYDATA_USE_LOWEST_RATE        1
 
+/* CFG_OS_FREERTOS----RTOS_FREERTOS
+   CFG_SUPPORT_RTT----RTOS_RT_THREAD
+   CFG_SUPPORT_LITEOS--RTOS_LITEOS
+   CFG_SUPPORT_ALIOS---RTOS_ALIOS_THINGS
+ */
 #define CFG_SUPPORT_RTOS                           RTOS_FREERTOS
 
 #define FREERTOS_V9                                1
@@ -46,6 +52,9 @@
 #define THDD_KEY_SCAN_PRIORITY                     7
 
 /*section 2-----function macro config-----*/
+#define CFG_SUPPORT_MATTER                         0
+#define CFG_RWNX_REODER                            0
+#define CFG_FORCE_RATE                             0
 #define CFG_TX_EVM_TEST                            1
 #define CFG_RX_SENSITIVITY_TEST                    1
 #define CFG_AP_MONITOR_COEXIST                     0
@@ -59,22 +68,20 @@
 #define CFG_WPA_CTRL_IFACE                         1
 #define CFG_RWNX_QOS_MSDU                          1
 #define CFG_WLAN_FAST_CONNECT                      0
+#if CFG_WLAN_FAST_CONNECT
+#define CFG_WLAN_FAST_CONNECT_STATIC_IP            0
+#define CFG_WLAN_SUPPORT_FAST_DHCP                 0
+#if (CFG_WLAN_FAST_CONNECT_STATIC_IP && CFG_WLAN_SUPPORT_FAST_DHCP)
+#error "static ip support and fast dhcp support cannot be opened at the same time"
+#endif
+#endif
 #define CFG_WPA2_ENTERPRISE                        0
 #define CFG_WPA3_ENTERPRISE                        0
-/* WiFi Direct Support, CFG_WIFI_WPS must be enabled */
-#define CFG_WIFI_P2P                               0
-#define CFG_RWNX_REODER                            0
-#define CFG_FORCE_RATE                             0
-
-#if CFG_WIFI_P2P
-/* WPS(WSC) Support */
-#define CFG_WIFI_WPS                               1
-#define CFG_WIFI_P2P_GO                            1
-#else
 /* WPS(WSC) Support */
 #define CFG_WIFI_WPS                               0
-#endif
-
+/* WiFi Direct Support, CFG_WIFI_WPS must be enabled */
+#define CFG_WIFI_P2P                               0
+#define CFG_WIFI_P2P_GO                            0
 /* Vendor Specific IEs when STA Probe Req/Association Req*/
 #define CFG_WIFI_STA_VSIE                          0
 /* Vendor Specific IEs when AP Beacon  */
@@ -132,7 +139,7 @@
 #define CFG_WFA_CERT                               0
 #define CFG_ENABLE_BUTTON                          0
 #define CFG_UDISK_MP3                              0
-#define CFG_EASY_FLASH                             1
+#define CFG_EASY_FLASH                             0
 #define CFG_AP_SUPPORT_HT_IE                       0
 #define CFG_SUPPORT_BSSID_CONNECT                  0
 #define CFG_USE_CONV_UTF8                          0
@@ -142,23 +149,27 @@
 #define CFG_QUICK_TRACK                            0
 
 /* use mbedtls as wpa crypto functions */
+#if( ( CFG_SUPPORT_ALIOS ) || ( CFG_SUPPORT_RTT ) )
 #define CFG_USE_MBEDTLS                            0
+#else
+#define CFG_USE_MBEDTLS                            1
+#endif
 #if CFG_USE_MBEDTLS
 #define CFG_MBEDTLS                                1
 #endif
 #if CFG_QUICK_TRACK
 #define _DUT_                                      1
 #endif
-
 /*section 3-----driver macro config-----*/
 #define CFG_MAC_PHY_BAPASS                         1
 #define CFG_SUPPORT_SARADC                         1
-#define CFG_SARADC_INTFACE                         0
-#define CFG_SARADC_CALIBRATE                       0
+#define CFG_SARADC_INTFACE                         1
+#define CFG_SARADC_CALIBRATE                       1
 
 #define CFG_SDIO                                   0
 #define CFG_SDIO_TRANS                             0
 #define CFG_REAL_SDIO                              0
+
 #if CFG_REAL_SDIO
 #define FOR_SDIO_BLK_512                           0
 #endif
@@ -166,17 +177,9 @@
 #define CFG_MSDU_RESV_HEAD_LEN                     96
 #define CFG_MSDU_RESV_TAIL_LEN                     16
 
-#define CFG_USB                                    0
 #define CFG_USE_USB_HOST                           0
-#define CFG_USE_USB_DEVICE                         1
-#if CFG_USB
-#if (!(CFG_USE_USB_HOST || CFG_USE_USB_DEVICE))
-#error "Must select one USB mode for enabling USB!"
-#endif
-#endif
-#if CFG_USE_USB_DEVICE
-#define CFG_USE_USB_DEVICE_CARD_READER             1
-#endif
+
+#define CFG_USB                                    0
 #if CFG_USB
 #define CFG_SUPPORT_MSD                            1
 #define CFG_SUPPORT_HID                            0
@@ -184,18 +187,33 @@
 #define CFG_SUPPORT_UVC                            0
 #endif
 #define CFG_USE_USB_CHARGE                         0
-#define CFG_USE_QSPI                               1
-#define CFG_USE_DCACHE                             0
 
 /*section 4-----DEBUG macro config-----*/
 #define CFG_UART_DEBUG                             0
 #define CFG_SUPPORT_BKREG                          1
 #define CFG_ENABLE_WPA_LOG                         0
+#define IPERF_CLOSE                                0  /* close iperf */
+#define IPERF_OPEN_WITH_ACCEL                      1  /* open iperf and accel */
+#define IPERF_OPEN_ONLY                            2  /* open iperf, but no open accel */
+#if(CFG_SUPPORT_MATTER == 1)
+#define CFG_IPERF_TEST                             IPERF_CLOSE
+#else
+#define CFG_IPERF_TEST                             IPERF_OPEN_ONLY
+#endif
+#if (CFG_IPERF_TEST == IPERF_OPEN_WITH_ACCEL)
+#define CFG_IPERF_TEST_ACCEL                       1
+#define CFG_IPERF_DONT_MALLOC_BUFFER               1
+#endif
 #define CFG_TCP_SERVER_TEST                        0
 #define CFG_AIRKISS_TEST                           0
 #define CFG_ENABLE_DEMO_TEST                       0
 #define CFG_WIFI_SENSOR                            0
 #define CFG_WIFI_RAW_TX_CMD                        0
+
+#define ASSERT_HALT                                1
+#define ASSERT_IGNORE                              2
+#define ASSERT_REBOOT                              3
+#define CFG_ASSERT_OPTION                          ASSERT_IGNORE
 
 /*section 5-----PRODUCT macro config-----*/
 #define CFG_RELEASE_FIRMWARE                       0
@@ -210,8 +228,10 @@
 #define SOC_BK7221U                                3
 #define SOC_BK7271                                 4
 #define SOC_BK7231N                                5
-#define CFG_SOC_NAME                               SOC_BK7221U
-#define CFG_SOC_NAME_STR                           "bk7251"
+#define SOC_BK7236                                 6
+#define SOC_BK7238                                 7
+#define CFG_SOC_NAME                               SOC_BK7238
+#define CFG_SOC_NAME_STR                           "bk7238"
 
 /*section 7-----calibration*/
 #if (CFG_RUNNING_PLATFORM == FPGA_PLATFORM)
@@ -231,43 +251,13 @@
 #define CFG_USE_DHCP                               1
 #define CFG_USE_DHCPD                              1 // for servicers in ap mode
 
-
-#define CFG_BK7221_MDM_WATCHDOG_PATCH              0
-
 /*section 11-----temperature detect*/
-#define CFG_USE_TEMPERATURE_DETECT                 0
+#define CFG_USE_TEMPERATURE_DETECT                 1
+#define CFG_USE_VOLTAGE_DETECT                     0
 
-/*section 12-----for video transfer*/
-#define IPERF_CLOSE                                0  /* close iperf */
-#define IPERF_OPEN_WITH_ACCEL                      1  /* open iperf and accel */
-#define IPERF_OPEN_ONLY                            2  /* open iperf, but no open accel */
-#define CFG_IPERF_TEST                             IPERF_OPEN_ONLY
-
-#if CFG_WIFI_P2P
-#define CFG_USE_APP_DEMO_VIDEO_TRANSFER            1
-#define CFG_USE_CAMERA_INTF                        1
-#else
-#define CFG_USE_APP_DEMO_VIDEO_TRANSFER            0
-#define CFG_USE_CAMERA_INTF                        0
-#endif
-#define CFG_USE_HSLAVE_SPI                         0
+/*section 12-----for SPIDMA interface*/
 #define CFG_USE_SPIDMA                             0
-#if CFG_USE_CAMERA_INTF
-#define CFG_USE_I2C1                               1
-#define CFG_USE_I2C2                               0
-#endif
-
-#if (CFG_USE_APP_DEMO_VIDEO_TRANSFER)
-#undef CFG_IEEE80211N
-#define CFG_IEEE80211N                             0
-#undef CFG_IPERF_TEST
-#define CFG_IPERF_TEST                             IPERF_OPEN_WITH_ACCEL
-#endif
-
-#if (CFG_IPERF_TEST == IPERF_OPEN_WITH_ACCEL)
-#define CFG_IPERF_TEST_ACCEL                       1
-#define CFG_IPERF_DONT_MALLOC_BUFFER               1
-#endif
+#define CFG_USE_CAMERA_INTF                        0
 
 /*section 13-----for GENERRAL DMA */
 #define CFG_GENERAL_DMA                            1
@@ -275,45 +265,48 @@
 /*section 14-----for FTPD UPGRADE*/
 #define CFG_USE_FTPD_UPGRADE                       0
 
+/*section 15-----support customer macro*/
+#define CFG_SUPPORT_TIANZHIHENG_DRONE              0
+
 /*section 16-----support mcu & deep sleep*/
 #define CFG_USE_MCU_PS                             1
-#if (CFG_SUPPORT_ALIOS)
-#define CFG_USE_MCU_PS                             RHINO_CONFIG_PWRMGMT
-#endif
 
 #define CFG_USE_DEEP_PS                            1
 #define CFG_USE_BLE_PS                             1
 #define CFG_USE_AP_IDLE                            0
 #define CFG_USE_FAKERTC_PS                         0
-#define CFG_LOW_VOLTAGE_PS                         0
+#define CFG_LOW_VOLTAGE_PS                         1
 #define CFG_LOW_VOLTAGE_PS_32K_DIV                 0
+#define CFG_LOW_VOLTAGE_PS_COEXIST                 0
 #define CFG_LOW_VOLTAGE_PS_TEST                    0
+
+#if( ( CFG_SUPPORT_ALIOS ) || ( CFG_SUPPORT_RTT ) )
+#undef CFG_LOW_VOLTAGE_PS
+#define CFG_LOW_VOLTAGE_PS                         0
+#endif
+
+#if(CFG_LOW_VOLTAGE_PS == 1)
+#define CFG_HW_PARSER_TIM_ELEMENT                  1
+#else
+#define CFG_HW_PARSER_TIM_ELEMENT                  0
+#endif
+
+#define CFG_LV_PS_WITH_IDLE_TICK                   0
 
 /*section 17-----support sta power sleep*/
 #define CFG_USE_STA_PS                             1
-
+#define CFG_LOW_LATENCY_PS                         0
 /*section 18-----AP support stas in power save*/
-#if CFG_WIFI_P2P
-#define CFG_USE_AP_PS                              1
-#define CFG_USE_P2P_PS                             1
-#define CFG_TX_BUFING                              1
-#else
 #define CFG_USE_AP_PS                              0
-#define CFG_TX_BUFING                              0
-#endif
 
 /*section 19-----for SDCARD HOST*/
-#define CFG_USE_SDCARD_HOST                        1
-//select SD or SD1
-#define SD_HOST_INTF                               0
-#define SD1_HOST_INTF                              1
-#define CFG_SD_HOST_INTF                           SD1_HOST_INTF
+#define CFG_USE_SDCARD_HOST                        0
 
 /*section 20 ----- support mp3 decoder*/
 #define CONFIG_APP_MP3PLAYER                       0
 
 /*section 21 ----- support ota*/
-#if( ( CFG_SUPPORT_ALIOS ) || ( CFG_SUPPORT_RTT ) )
+#if( ( CFG_SUPPORT_ALIOS ) || ( CFG_SUPPORT_RTT ) || (CFG_SUPPORT_MATTER == 1))
 #define CFG_SUPPORT_OTA_HTTP                       0
 #else
 #define CFG_SUPPORT_OTA_HTTP                       1
@@ -331,15 +324,9 @@
 #endif
 
 /*section 25 ----- use audio*/
-#if (CFG_SOC_NAME == SOC_BK7221U)
-#define CFG_USE_AUDIO                              1
-#define CFG_USE_AUD_DAC                            1
-#define CFG_USE_AUD_ADC                            1
-#else
 #define CFG_USE_AUDIO                              0
 #define CFG_USE_AUD_DAC                            0
 #define CFG_USE_AUD_ADC                            0
-#endif
 
 /*section 25 ----- use tick time calibrate*/
 #define CFG_USE_TICK_CAL                           1
@@ -347,60 +334,148 @@
 #define CFG_SUPPORT_BLE                            1
 #define CFG_BLE_USE_CLI                            1
 #define CFG_SUPPORT_BLE_MESH                       0
-#define CFG_USE_PTA                                0
+#define CFG_USE_PTA                                1
+
+#if ((0 == CFG_SUPPORT_BLE) && (CFG_USE_BLE_PS))
+#error "check the ble macro, thx!"
+#endif
 
 #define BLE_VERSION_4_2                            1
 #define BLE_VERSION_5_1                            2
 #define BLE_VERSION_5_2                            3
 
-#define CFG_BLE_VERSION                            BLE_VERSION_4_2
-
-#define CFG_BLE_DIAGNOSTIC_PORT                    0
+#define CFG_BLE_VERSION                            BLE_VERSION_5_2
 
 #define WIFI_DEFAULT_BLE_REQUEST                   1
 #define BLE_DEFAULT_WIFI_REQUEST                   2
 #define BLE_WIFI_CO_REQUEST                        3
 #define RF_USE_POLICY                              WIFI_DEFAULT_BLE_REQUEST
 
-/*section 26 ----- general spi master/slave */
-#define CFG_USE_SPI                                1
-#define CFG_USE_SPI_MASTER                         1
-#define CFG_USE_SPI_MST_FLASH                      1
-#define CFG_USE_SPI_MST_PSRAM                      0
-#define CFG_USE_SPI_SLAVE                          0
+#define CFG_BLE_ADV_NUM                            1
+#define CFG_BLE_SCAN_NUM                           1
+#define CFG_BLE_USE_DYN_RAM                        1
+#define CFG_BLE_DIAGNOSTIC_PORT                    0
 
-/*section 27 ----- hardware security: aes/sha/rsa */
-#define CFG_USE_SECURITY                           0
+// 0 mean do not support ble master
+#define CFG_BLE_INIT_NUM                           1
 
-/*section 28 ----- hardware security: aes/sha/rsa */
-#define CFG_USE_SECURITY                           0
+#define CFG_BLE_CONN_NUM                           1
 
-#define CFG_USE_FFT                                0
-#define CFG_USE_I2S                                0
-#define CFG_USE_IRDA                               0
+#if (CFG_BLE_ADV_NUM == 0)
+#error "ADV NUM should not be 0"
+#endif
+
+#if (CFG_BLE_CONN_NUM == 0)
+#error "CONN NUM should not be 0"
+#endif
 
 #define CFG_XTAL_FREQUENCE_40M                     40000000 //40MHz
 #define CFG_XTAL_FREQUENCE_26M                     26000000 //26MHz
-#if (CFG_SOC_NAME == SOC_BK7231N)
-#define CFG_XTAL_FREQUENCE                         CFG_XTAL_FREQUENCE_26M//CFG_XTAL_FREQUENCE_40M
-#else
 #define CFG_XTAL_FREQUENCE                         CFG_XTAL_FREQUENCE_26M
+#define CFG_XTAL_85DEGREE                          0
+
+#if (CFG_SUPPORT_ALIOS)
+#undef  CFG_JTAG_ENABLE
+#define CFG_JTAG_ENABLE                            0
+#undef  CFG_ROLE_LAUNCH
+#define CFG_ROLE_LAUNCH                            0
+#undef  CFG_USE_MCU_PS
+#define CFG_USE_MCU_PS                             RHINO_CONFIG_CPU_PWR_MGMT
+#endif
+
+#define LWIP_DEFAULT_MEM_POLICY                    1
+#define LWIP_REDUCE_THE_PLAN                       2
+#if CFG_IPERF_TEST
+/* for iperf test, temporary enlarge lwip MEM_SIZE */
+#define CFG_LWIP_MEM_POLICY                        LWIP_DEFAULT_MEM_POLICY
+#else
+#define CFG_LWIP_MEM_POLICY                        LWIP_REDUCE_THE_PLAN
 #endif
 
 #define FLASH_SELECTION_TYPE_DYNAMIC               0 //select with flashID runtime
+#define FLASH_SELECTION_TYPE_1M                    0x100000 //1MBytes
 #define FLASH_SELECTION_TYPE_2M                    0x200000 //2MBytes
 #define FLASH_SELECTION_TYPE_4M                    0x400000 //4MBytes
 #define FLASH_SELECTION_TYPE_8M                    0x800000 //8MBytes
 #define CFG_FLASH_SELECTION_TYPE                   FLASH_SELECTION_TYPE_2M
 
+#if (1 == CFG_SUPPORT_MATTER)
+#undef CFG_MBEDTLS
+#define CFG_MBEDTLS                                1
+#endif
+
 /* watchdog, freertos only */
+#if CFG_JTAG_ENABLE
+#define CFG_INT_WDG_ENABLED                        0
+#define CFG_INT_WDG_PERIOD_MS                      10000
+/*if use DUMP_STACK_WHEN_TASK_WDG_TIGGERED ,please pay attention to xTaskGetStackInfo !!!*/
+#define CFG_TASK_WDG_ENABLED                       0
+#define CFG_TASK_WDG_PERIOD_MS                     60000
+#else
 #define CFG_INT_WDG_ENABLED                        1
 #define CFG_INT_WDG_PERIOD_MS                      10000
 #define CFG_TASK_WDG_ENABLED                       1
 #define CFG_TASK_WDG_PERIOD_MS                     60000
+#endif
 
+/*section 29 -----  peripheral interface open  */
+#define CFG_USE_I2C1                               0
+#define CFG_USE_I2C2                               0
+
+#define CFG_USE_SPI                                0
+#define CFG_USE_SPI_MASTER                         0
+#define CFG_USE_SPI_SLAVE                          0
+#define CFG_USE_SPI_DMA                            0
+
+/*section 30 ----- peripheral interface test case */
+#define CFG_PERIPHERAL_TEST                        0
+#define CFG_SUPPORT_SPI_TEST                       0
+
+#define CFG_USE_FORCE_LOWVOL_PS                    1
+
+#define CFG_NO_POWTBL                              1
+#define CFG_TKIP_SW_CRYPT                          1
+#define CFG_BK7238_WORKAROUND                      1
+#define CFG_BK7238_NON_SIGNALING_OPTIMIZE          1
+#define CFG_NX_MAC_DEEP_CLKGATE                    0
+#define CFG_BK7238_NX_POWTBL_ISSUE                 1
+#define CFG_NX_SOFTWARE_TX_RETRY                   1
+#define CFG_NX_OPTIMIZE_WEAKSIGNAL                 1
+
+#define CFG_WRAP_LIBC                              1
+
+#if((!CFG_SUPPORT_ALIOS) && (!CFG_SUPPORT_RTT))
+#define AT_SERVICE_CFG                             0 //At command configurations
+#else
 #define AT_SERVICE_CFG                             0
+#endif
 
-#define CFG_USE_FORCE_LOWVOL_PS                    0
+#if (AT_SERVICE_CFG)
+#ifdef CFG_BLE_INIT_NUM
+#undef CFG_BLE_INIT_NUM
+#endif
+#define CFG_BLE_INIT_NUM                           1
+#ifdef _CJSON_USE_
+#undef _CJSON_USE_
+#endif
+#define _CJSON_USE_                                1
+#define CFG_USE_HTTP                               1
+#define CFG_USE_MQTT                               1
+#define CFG_USE_DISTRIBUTION_NETWORK               1
+#define CFG_USE_TCPUDP                             1
+#define CFG_USE_NETWORKING                         1
+#define CFG_USE_DEFUALT_CMD                        1
+#define CFG_USE_BLE                                1
+#define CFG_USE_NTP                                1
+
+#if (CFG_USE_MBEDTLS == 0)
+#undef CFG_USE_MBEDTLS
+#define CFG_USE_MBEDTLS                            1
+#define CFG_MBEDTLS                                1
+#endif // (CFG_USE_MBEDTLS == 0)
+#define CFG_USE_SOFT_RTC                           1
+#endif // (AT_SERVICE_CFG)
+
+#define CFG_DEFAULT_ADC_HIGH_BITS                  0x84
 
 #endif // _SYS_CONFIG_H_

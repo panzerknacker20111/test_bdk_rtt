@@ -9,12 +9,30 @@
 #define CFG_USE_UART2                              1
 #define CFG_JTAG_ENABLE                            0
 #define OSMALLOC_STATISTICAL                       0
+#define CFG_MEM_DEBUG                              0
 
 /*section 0-----app macro config-----*/
 #define CFG_IEEE80211N                             1
-#define CFG_IEEE80211AX                            1
+#define CFG_IEEE80211N_HT40                        0
 
 /*section 1-----OS macro config-----*/
+#define RTOS_ALIOS_THINGS                          1
+#define RTOS_RT_THREAD                             2
+#define RTOS_FREERTOS                              3
+#define RTOS_LITEOS                                4
+
+#define CFG_SUPPORT_RTOS                           RTOS_FREERTOS
+
+#define FREERTOS_V9                                1
+#define FREERTOS_V10                               2
+#define CFG_FREERTOS_VER                           FREERTOS_V9
+
+#define ENC_METHOD_NULL                            1
+#define ENC_METHOD_XOR                             2
+#define ENC_METHOD_AES                             3
+
+#define FAST_CONNECT_INFO_ENC_METHOD               ENC_METHOD_NULL
+
 #define THD_APPLICATION_PRIORITY                   3
 #define THD_CORE_PRIORITY                          2
 #define THD_UMP3_PRIORITY                          4
@@ -36,34 +54,92 @@
 #undef CFG_AP_MONITOR_COEXIST
 #define CFG_AP_MONITOR_COEXIST                     0
 #endif
+#if CFG_AP_MONITOR_COEXIST
+#define CFG_AP_MONITOR_COEXIST_DEMO                0
+/*AP will switch to ori channel when tbtt arrive*/
+#define CFG_AP_MONITOR_COEXIST_TBTT                0
+#endif
 #define CFG_ROLE_LAUNCH                            0
 #define CFG_USE_WPA_29                             1
 #define CFG_WPA_CTRL_IFACE                         1
 #define CFG_RWNX_QOS_MSDU                          1
 #define CFG_WLAN_FAST_CONNECT                      0
+#define CFG_WPA2_ENTERPRISE                        0
+#define CFG_WPA3_ENTERPRISE                        0
+/* WPS(WSC) Support */
+#define CFG_WIFI_WPS                               0
+/* WiFi Direct Support, CFG_WIFI_WPS must be enabled */
+#define CFG_WIFI_P2P                               0
+#define CFG_WIFI_P2P_GO                            0
+/* Vendor Specific IEs when STA Probe Req/Association Req*/
+#define CFG_WIFI_STA_VSIE                          0
+/* Vendor Specific IEs when AP Beacon  */
+#define CFG_WIFI_AP_VSIE                           0
+/* Custom softap basic rates, supported rates, ht mcs set */
+#define CFG_WIFI_AP_CUSTOM_RATES                   0
+/* repush txdesc when txl_reset happens */
+#define CFG_WIFI_REPUSH_WHEN_RESET                 0
+
+#define CfG_MACRO_MAYBE_UNUSED                     1
+#if CfG_MACRO_MAYBE_UNUSED
+#define CFG_WIFI_RSSI                              1
+#define CFG_WIFI_VERSION                           1
+#define CFG_WIFI_CHANNEL                           1
+#define CFG_WIFI_SLOTTIME                          1
+#define CFG_WIFI_DBG_TROGGER                       1
+#define CFG_MODE_SET                               1
+#define CFG_FILTER_SET                             1
+#define CFG_RC_STATS                               1
+#endif
+
 /* PMF */
 #define CFG_IEEE80211W                             0
 #if CFG_WPA_CTRL_IFACE
 #undef CFG_ROLE_LAUNCH
 #define CFG_ROLE_LAUNCH                            0
 #endif
+
+/*Use macro to shut down some unused functions*/
+#define CFG_WPA_MAYBE_UNUSED                       1
+#if CFG_WPA_MAYBE_UNUSED
+#define CONFIG_NOTIFICATION                        1
+#define CONFIG_EID_FLAG                            1
+#define CONFIG_PMKSA_EXISTS                        1
+#define CONFIG_GTK_REKEY                           1
+#endif
+
 #define CFG_WPA3                                   0
 #if CFG_WPA3
 #undef CFG_USE_WPA_29
 #define CFG_USE_WPA_29                             1
 #undef CFG_IEEE80211W
 #define CFG_IEEE80211W                             1
-#define CFG_SME                                    1
+#define CFG_OWE                                    0
+/* use wpa2 instead of wpa3-sae if in wpa3 transition mode */
+#define CFG_CFG_WPA2_PREFER_TO_SAE                 0
 #endif
-//#define CFG_MESH                                 0
 #define CFG_WFA_CERT                               0
 #define CFG_ENABLE_BUTTON                          0
 #define CFG_UDISK_MP3                              0
 #define CFG_EASY_FLASH                             0
 #define CFG_AP_SUPPORT_HT_IE                       0
 #define CFG_SUPPORT_BSSID_CONNECT                  0
+#define CFG_USE_CONV_UTF8                          0
 #define CFG_BK_AWARE                               0
 #define CFG_BK_AWARE_OUI                           "\xC8\x47\x8C"
+#define CFG_RESTORE_CONNECT                        0
+#define CFG_QUICK_TRACK                            0
+#define CFG_RWNX_REODER                            0
+#define CFG_FORCE_RATE                             0
+
+/* use mbedtls as wpa crypto functions */
+#define CFG_USE_MBEDTLS                            0
+#if CFG_USE_MBEDTLS
+#define CFG_MBEDTLS                                1
+#endif
+#if CFG_QUICK_TRACK
+#define _DUT_                                      1
+#endif
 
 /*section 3-----driver macro config-----*/
 #define CFG_MAC_PHY_BAPASS                         1
@@ -75,8 +151,8 @@
 #define FOR_SDIO_BLK_512                           0
 #endif
 
-#define CFG_MSDU_RESV_HEAD_LEN                    96
-#define CFG_MSDU_RESV_TAIL_LEN                    16
+#define CFG_MSDU_RESV_HEAD_LEN                     96
+#define CFG_MSDU_RESV_TAIL_LEN                     16
 
 #define CFG_USE_USB_HOST                           0
 
@@ -91,10 +167,16 @@
 
 /*section 4-----DEBUG macro config-----*/
 #define CFG_UART_DEBUG                             0
-#define CFG_BACKGROUND_PRINT                       0
 #define CFG_SUPPORT_BKREG                          1
 #define CFG_ENABLE_WPA_LOG                         0
-#define CFG_IPERF_TEST                             0
+#define IPERF_CLOSE                                0  /* close iperf */
+#define IPERF_OPEN_WITH_ACCEL                      1  /* open iperf and accel */
+#define IPERF_OPEN_ONLY                            2  /* open iperf, but no open accel */
+#define CFG_IPERF_TEST                             IPERF_OPEN_ONLY
+#if (CFG_IPERF_TEST == IPERF_OPEN_WITH_ACCEL)
+#define CFG_IPERF_TEST_ACCEL                       1
+#define CFG_IPERF_DONT_MALLOC_BUFFER               1
+#endif
 #define CFG_TCP_SERVER_TEST                        0
 #define CFG_AIRKISS_TEST                           0
 #define CFG_ENABLE_DEMO_TEST                       0
@@ -121,6 +203,7 @@
 #define SOC_BK7231N                                5
 #define SOC_BK7236                                 6
 #define CFG_SOC_NAME                               SOC_BK7236
+#define CFG_SOC_NAME_STR                           "bk7236"
 
 /*section 7-----calibration*/
 #if (CFG_RUNNING_PLATFORM == FPGA_PLATFORM)
@@ -162,6 +245,9 @@
 #define CFG_USE_BLE_PS                             1
 #define CFG_USE_AP_IDLE                            0
 #define CFG_USE_FAKERTC_PS                         0
+#define CFG_LOW_VOLTAGE_PS                         0
+#define CFG_LOW_VOLTAGE_PS_32K_DIV                 0
+#define CFG_LOW_VOLTAGE_PS_TEST                    0
 
 /*section 17-----support sta power sleep*/
 #define CFG_USE_STA_PS                             1
@@ -205,15 +291,15 @@
 #define CFG_USE_PTA                                0
 
 #define BLE_VERSION_4_2                            1
-#define BLE_VERSION_5_x                            2
-#define CFG_BLE_VERSION                            BLE_VERSION_5_x
+#define BLE_VERSION_5_1                            2
+#define BLE_VERSION_5_2                            3
+
+#define CFG_BLE_VERSION                            BLE_VERSION_5_1
 
 #define WIFI_DEFAULT_BLE_REQUEST                   1
 #define BLE_DEFAULT_WIFI_REQUEST                   2
 #define BLE_WIFI_CO_REQUEST                        3
 #define RF_USE_POLICY                              WIFI_DEFAULT_BLE_REQUEST
-
-#define CFG_SUPPOET_BSSID_CONNECT                  0
 
 #define CFG_XTAL_FREQUENCE_40M                     40000000 //40MHz
 #define CFG_XTAL_FREQUENCE_26M                     26000000 //26MHz
@@ -242,6 +328,12 @@
 #define CFG_LWIP_MEM_POLICY                       LWIP_REDUCE_THE_PLAN
 #endif
 
+#define FLASH_SELECTION_TYPE_DYNAMIC               0 //select with flashID runtime
+#define FLASH_SELECTION_TYPE_2M                    0x200000 //2MBytes
+#define FLASH_SELECTION_TYPE_4M                    0x400000 //4MBytes
+#define FLASH_SELECTION_TYPE_8M                    0x800000 //8MBytes
+#define CFG_FLASH_SELECTION_TYPE                   FLASH_SELECTION_TYPE_2M
+
 
 /* watchdog, freertos only */
 #define CFG_INT_WDG_ENABLED                        1
@@ -251,5 +343,6 @@
 
 #define AT_SERVICE_CFG                             0
 
+#define CFG_USE_FORCE_LOWVOL_PS                    0
 
 #endif // _SYS_CONFIG_H_
