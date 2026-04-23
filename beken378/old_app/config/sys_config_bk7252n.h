@@ -8,37 +8,11 @@
 #define CFG_USE_UART1                              1
 #define CFG_JTAG_ENABLE                            0
 #define OSMALLOC_STATISTICAL                       0
-#define CFG_MEM_DEBUG                              0
 
 /*section 0-----app macro config-----*/
 #define CFG_IEEE80211N                             1
-#define CFG_IEEE80211N_HT40                        0
 
 /*section 1-----OS macro config-----*/
-#define RTOS_ALIOS_THINGS                          1
-#define RTOS_RT_THREAD                             2
-#define RTOS_FREERTOS                              3
-#define RTOS_LITEOS                                4
-#define CFG_WIFI_TX_KEYDATA_USE_LOWEST_RATE        1
-
-/* CFG_OS_FREERTOS----RTOS_FREERTOS
-   CFG_SUPPORT_RTT----RTOS_RT_THREAD
-   CFG_SUPPORT_LITEOS--RTOS_LITEOS
-   CFG_SUPPORT_ALIOS---RTOS_ALIOS_THINGS
- */
-#define CFG_SUPPORT_RTOS                           RTOS_FREERTOS
-
-#define FREERTOS_V9                                1
-#define FREERTOS_V10                               2
-#define CFG_FREERTOS_VER                           FREERTOS_V9
-#define CfG_ENABLE_HEAP_5                          (0)
-
-#define ENC_METHOD_NULL                            1
-#define ENC_METHOD_XOR                             2
-#define ENC_METHOD_AES                             3
-
-#define FAST_CONNECT_INFO_ENC_METHOD               ENC_METHOD_NULL
-
 #define THD_APPLICATION_PRIORITY                   3
 #define THD_CORE_PRIORITY                          2
 #define THD_UMP3_PRIORITY                          4
@@ -53,16 +27,9 @@
 #define THDD_KEY_SCAN_PRIORITY                     7
 
 /*section 2-----function macro config-----*/
-#define CFG_SUPPORT_MATTER                         0
-
 #define CFG_TX_EVM_TEST                            1
 #define CFG_RX_SENSITIVITY_TEST                    1
 #define CFG_AP_MONITOR_COEXIST                     0
-#if CFG_AP_MONITOR_COEXIST
-#define CFG_AP_MONITOR_COEXIST_DEMO                0
-/*AP will switch to ori channel when tbtt arrive*/
-#define CFG_AP_MONITOR_COEXIST_TBTT                0
-#endif
 #define CFG_ROLE_LAUNCH                            0
 #define CFG_USE_WPA_29                             1
 #define CFG_WPA_CTRL_IFACE                         1
@@ -117,7 +84,7 @@
 #undef CFG_ROLE_LAUNCH
 #define CFG_ROLE_LAUNCH                            0
 #endif
-#define CFG_WPA3                                   1
+#define CFG_WPA3                                   0
 #if CFG_WPA3
 #undef CFG_USE_WPA_29
 #define CFG_USE_WPA_29                             1
@@ -130,7 +97,7 @@
 #define CFG_WFA_CERT                               0
 #define CFG_ENABLE_BUTTON                          0
 #define CFG_UDISK_MP3                              0
-#define CFG_EASY_FLASH                             0
+#define CFG_EASY_FLASH                             1
 #define CFG_AP_SUPPORT_HT_IE                       0
 #define CFG_SUPPORT_BSSID_CONNECT                  0
 #define CFG_USE_CONV_UTF8                          0
@@ -175,6 +142,15 @@
 #define CFG_USE_USB_HOST                           0
 
 #define CFG_USB                                    0
+#define CFG_USE_USB_DEVICE                         1
+#if CFG_USB
+#if (!(CFG_USE_USB_HOST || CFG_USE_USB_DEVICE))
+#error "Must select one USB mode for enabling USB!"
+#endif
+#endif
+#if CFG_USE_USB_DEVICE
+#define CFG_USE_USB_DEVICE_CARD_READER              1
+#endif											   
 #if CFG_USB
 #define CFG_SUPPORT_MSD                            1
 #define CFG_SUPPORT_HID                            0
@@ -186,6 +162,8 @@
 
 /*section 4-----DEBUG macro config-----*/
 #define CFG_UART_DEBUG                             0
+#define CFG_UART_DEBUG_COMMAND_LINE                1
+#define CFG_BACKGROUND_PRINT                       0
 #define CFG_SUPPORT_BKREG                          1
 #define CFG_ENABLE_WPA_LOG                         0
 #define CFG_TCP_SERVER_TEST                        0
@@ -255,6 +233,7 @@
 #endif
 #define CFG_USE_HSLAVE_SPI                         0
 #define CFG_USE_SPIDMA                             0
+#define CFG_USE_CAMERA_INTF                        1
 #if CFG_USE_CAMERA_INTF
 #define CFG_USE_I2C1                               1
 #define CFG_USE_I2C2                               0
@@ -286,6 +265,9 @@
 
 /*section 16-----support mcu & deep sleep*/
 #define CFG_USE_MCU_PS                             1
+#if (CFG_SUPPORT_ALIOS)
+#define CFG_USE_MCU_PS                             RHINO_CONFIG_PWRMGMT
+#endif
 
 #define CFG_USE_DEEP_PS                            1
 #define CFG_USE_BLE_PS                             1
@@ -317,12 +299,16 @@
 
 /*section 19-----for SDCARD HOST*/
 #define CFG_USE_SDCARD_HOST                        1
+//select SD or SD1
+#define SD_HOST_INTF                                1
+#define SD1_HOST_INTF                               0
+#define CFG_SD_HOST_INTF                            SD_HOST_INTF
 
 /*section 20 ----- support mp3 decoder*/
 #define CONFIG_APP_MP3PLAYER                       0
 
 /*section 21 ----- support ota*/
-#if( ( CFG_SUPPORT_ALIOS ) || ( CFG_SUPPORT_RTT ) || (CFG_SUPPORT_MATTER == 1))
+#if( ( CFG_SUPPORT_ALIOS ) || ( CFG_SUPPORT_RTT ) )
 #define CFG_SUPPORT_OTA_HTTP                       0
 #else
 #define CFG_SUPPORT_OTA_HTTP                       1
@@ -366,7 +352,23 @@
 #define BLE_DEFAULT_WIFI_REQUEST                   2
 #define BLE_WIFI_CO_REQUEST                        3
 #define RF_USE_POLICY                              WIFI_DEFAULT_BLE_REQUEST
+/*section 26 ----- general spi master/slave */
+#define CFG_USE_SPI_MASTER                         1
+#define CFG_USE_SPI_MST_FLASH                      1
+#define CFG_USE_SPI_MST_PSRAM                      0
+#define CFG_USE_SPI_SLAVE                          0
 
+/*section 27 ----- hardware security: aes/sha/rsa */
+#define CFG_USE_SECURITY                           0
+
+/*section 28 ----- hardware security: aes/sha/rsa */
+#define CFG_USE_SECURITY                           0
+
+#define CFG_USE_FFT                                0
+#define CFG_USE_I2S                                0
+#define CFG_USE_IRDA                               0
+
+#define CFG_SUPPOET_BSSID_CONNECT                  0
 #define CFG_BLE_ADV_NUM                            1
 #define CFG_BLE_SCAN_NUM                           1
 #define CFG_BLE_USE_DYN_RAM                        1
